@@ -45,6 +45,14 @@ spring:
               args:
                 name: transactionCB
 
+        - id: auth-service
+          uri:lb://AUTH-SERVICE
+          predicate:
+             -Path=/api/auth/**, /auth2/**
+          filters:
+             -StripPrefix=1
+            
+
 
 eureka:
   client:
