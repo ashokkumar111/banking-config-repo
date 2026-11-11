@@ -12,7 +12,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:9000/oauth2/jwks
+          issuer-uri: http://localhost:9000
 
   data:
     redis:
@@ -28,6 +28,7 @@ spring:
             redis-rate-limiter.burstCapacity: 10
 
       routes:
+        # Account Service
         - id: account-service
           uri: lb://ACCOUNT-SERVICE
           predicates:
@@ -35,6 +36,7 @@ spring:
           filters:
             - StripPrefix=1
 
+        # Transaction Service
         - id: transaction-service
           uri: lb://TRANSACTION-SERVICE
           predicates:
@@ -45,19 +47,24 @@ spring:
               args:
                 name: transactionCB
 
+        # Auth Service - Custom authentication APIs
         - id: auth-service
-          uri:lb://AUTH-SERVICE
-          predicate:
-             -Path=/api/auth/**, /auth2/**
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/api/auth/**
           filters:
-             -StripPrefix=1
-            
+            - StripPrefix=1
 
+        # Auth Service - OAuth2 endpoints
+        - id: oauth2-service
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/oauth2/**
 
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka
+      defaultZone: http://localhost:8761/eureka/
 
 management:
   endpoints:
