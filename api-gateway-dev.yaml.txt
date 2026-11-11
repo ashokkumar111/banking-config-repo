@@ -5,18 +5,15 @@ spring:
   application:
     name: api-gateway
 
-  profiles:
-    active: dev
-
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:9000
+          jwk-set-uri: http://auth-service:9000/oauth2/jwks
 
   data:
     redis:
-      host: localhost
+      host: redis
       port: 6379
 
   cloud:
@@ -28,49 +25,45 @@ spring:
             redis-rate-limiter.burstCapacity: 10
 
       routes:
-        # Account Service
         - id: account-service
           uri: lb://ACCOUNT-SERVICE
           predicates:
-            - Path=/api/account/**
+            - Path=/api/accounts/**
           filters:
             - StripPrefix=1
 
-        # Transaction Service
         - id: transaction-service
           uri: lb://TRANSACTION-SERVICE
           predicates:
-            - Path=/api/transaction/**
+            - Path=/api/transactions/**
           filters:
             - StripPrefix=1
             - name: CircuitBreaker
               args:
                 name: transactionCB
+                fallbackUri: forward:/fallback/transaction
 
-        # Auth Service - Custom authentication APIs
         - id: auth-service
           uri: lb://AUTH-SERVICE
           predicates:
-            - Path=/api/auth/**
+            - Path=/auth/**,/oauth2/**
           filters:
             - StripPrefix=1
 
-        # Auth Service - OAuth2 endpoints
-        - id: oauth2-service
-          uri: lb://AUTH-SERVICE
+        - id: customer-service
+          uri: lb://CUSTOMER-SERVICE
           predicates:
-            - Path=/oauth2/**
+            - Path=/api/customers/**, /api/kyc/**
+          filters:
+            - StripPrefix=1
 
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://eureka-server:8761/eureka
 
 management:
   endpoints:
     web:
       exposure:
-        include:
-          - health
-          - info
-          - prometheus
+        include: health,info,prometheus
