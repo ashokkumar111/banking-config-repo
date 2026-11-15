@@ -51,7 +51,7 @@ spring:
             - StripPrefix=1
 
         - id: customer-service
-          uri: lb://CUSTOMER-SERVICE
+          uri: http://localhost:8082
           predicates:
             - Path=/api/customers/**, /api/kyc/**
           filters:
