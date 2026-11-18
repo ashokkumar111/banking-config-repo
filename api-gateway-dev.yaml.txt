@@ -53,7 +53,7 @@ spring:
         - id: customer-service
           uri: lb://CUSTOMER-SERVICE
           predicates:
-            - Path=/api/customers/**, /api/kyc/**
+            - Path=/api/customers/**
           filters:
             - StripPrefix=1
 
@@ -67,3 +67,6 @@ management:
     web:
       exposure:
         include: health,info,prometheus
+  endpoint:
+    gateway:
+      access: read-only
