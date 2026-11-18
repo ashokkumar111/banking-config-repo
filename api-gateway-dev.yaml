@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: config-server
+    name: api-gateway
 
   security:
     oauth2:
@@ -13,54 +13,56 @@ spring:
 
   data:
     redis:
-      host: redis
+      host: localhost
       port: 6379
 
   cloud:
     gateway:
-      default-filters:
-        - name: RequestRateLimiter
-          args:
-            redis-rate-limiter.replenishRate: 5
-            redis-rate-limiter.burstCapacity: 10
-
-      routes:
-        - id: account-service
-          uri: lb://ACCOUNT-SERVICE
-          predicates:
-            - Path=/api/accounts/**
-          filters:
-            - StripPrefix=1
-
-        - id: transaction-service
-          uri: lb://TRANSACTION-SERVICE
-          predicates:
-            - Path=/api/transactions/**
-          filters:
-            - StripPrefix=1
-            - name: CircuitBreaker
+      server:
+        webflux:
+          default-filters:
+            - name: RequestRateLimiter
               args:
-                name: transactionCB
-                fallbackUri: forward:/fallback/transaction
+                redis-rate-limiter.replenishRate: 5
+                redis-rate-limiter.burstCapacity: 10
 
-        - id: auth-service
-          uri: lb://AUTH-SERVICE
-          predicates:
-            - Path=/auth/**,/oauth2/**
-          filters:
-            - StripPrefix=1
+          routes:
+            - id: account-service
+              uri: lb://ACCOUNT-SERVICE
+              predicates:
+                - Path=/api/accounts/**
+              filters:
+                - StripPrefix=1
 
-        - id: customer-service
-          uri: lb://CUSTOMER-SERVICE
-          predicates:
-            - Path=/api/customers,/api/customers/**
-          filters:
-            - StripPrefix=1
+            - id: transaction-service
+              uri: lb://TRANSACTION-SERVICE
+              predicates:
+                - Path=/api/transactions/**
+              filters:
+                - StripPrefix=1
+                - name: CircuitBreaker
+                  args:
+                    name: transactionCB
+                    fallbackUri: forward:/fallback/transaction
+
+            - id: auth-service
+              uri: lb://AUTH-SERVICE
+              predicates:
+                - Path=/auth/**,/oauth2/**
+              filters:
+                - StripPrefix=1
+
+            - id: customer-service
+              uri: lb://CUSTOMER-SERVICE
+              predicates:
+                - Path=/api/customers,/api/customers/**
+              filters:
+                - StripPrefix=1
 
 eureka:
   client:
     service-url:
-      defaultZone: http://eureka-server:8761/eureka
+      defaultZone: http://localhost:8761/eureka
 
 management:
   endpoints:
@@ -70,11 +72,3 @@ management:
   endpoint:
     gateway:
       access: read-only
-
-
-
-
-
-
-
-
